@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard COVID-19 Colombia | Estadísticas en Tiempo Real</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#111827',
+                            card: '#1F2937',
+                            text: '#F3F4F6'
+                        },
+                        light: {
+                            bg: '#F3F4F6',
+                            card: '#FFFFFF',
+                            text: '#1F2937'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text min-h-screen transition-colors duration-300">
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header & Controls -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Dashboard COVID-19 Colombia</h1>
+
+            <div class="flex flex-wrap gap-4 items-center">
+                <label for="departmentFilter" class="sr-only">Filtrar por Departamento</label>
+                <select id="departmentFilter"
+                    class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Todos los Departamentos</option>
+                </select>
+
+                <label for="genderFilter" class="sr-only">Filtrar por Género</label>
+                <select id="genderFilter"
+                    class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Todos los Géneros</option>
+                    <option value="F">Femenino</option>
+                    <option value="M">Masculino</option>
+                </select>
+
+                <button id="applyFilters"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                    Aplicar Filtros
+                </button>
+            </div>
+
+            <!-- Theme Toggle -->
+            <button id="themeToggle" aria-label="Cambiar tema"
+                class="p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <!-- Sun Icon (visible en modo oscuro) -->
+                <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-amber-500 hidden" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <!-- Moon Icon (visible en modo claro) -->
+                <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                </svg>
+            </button>
+        </header>
+
+        <!-- KPI Cards -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10" aria-label="Indicadores Clave">
+            <!-- Total Cases Card -->
+            <article
+                class="bg-light-card dark:bg-dark-card rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wider">Casos Totales</p>
+                        <h2 id="total-cases" class="text-3xl font-bold text-gray-900 dark:text-white mt-1">...</h2>
+                    </div>
+                    <div class="p-3 bg-blue-100 dark:bg-blue-500/20 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600 dark:text-blue-500"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Fatal Cases Card -->
+            <article
+                class="bg-light-card dark:bg-dark-card rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fallecidos</p>
+                        <h2 id="total-deaths" class="text-3xl font-bold text-red-600 dark:text-red-500 mt-1">...</h2>
+                    </div>
+                    <div class="p-3 bg-red-100 dark:bg-red-500/20 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600 dark:text-red-500"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <!-- Charts Section Row 1 -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8" aria-label="Gráficos Principales">
+            <!-- Chart 1: Status -->
+            <div
+                class="bg-light-card dark:bg-dark-card rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Estado de los Casos</h3>
+                <div class="relative h-64 w-full">
+                    <canvas id="statusChart" aria-label="Gráfico de estado de casos" role="img"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Top Cities -->
+            <div
+                class="bg-light-card dark:bg-dark-card rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Top 10 Ciudades</h3>
+                <div class="relative h-64 w-full">
+                    <canvas id="citiesChart" aria-label="Gráfico de top 10 ciudades" role="img"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section Row 2 -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8" aria-label="Gráficos Demográficos">
+            <!-- Chart 3: Gender -->
+            <div
+                class="bg-light-card dark:bg-dark-card rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Género</h3>
+                <div class="relative h-64 w-full">
+                    <canvas id="genderChart" aria-label="Gráfico de distribución por género" role="img"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 4: Age Distribution -->
+            <div
+                class="bg-light-card dark:bg-dark-card rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 lg:col-span-2 transition-colors duration-300">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Edad</h3>
+                <div class="relative h-64 w-full">
+                    <canvas id="ageChart" aria-label="Gráfico de distribución por edad" role="img"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section Row 3 -->
+        <section class="grid grid-cols-1 gap-8" aria-label="Gráficos Temporales">
+            <!-- Chart 5: Deaths over Time -->
+            <div
+                class="bg-light-card dark:bg-dark-card rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Fallecidos (Tiempo)</h3>
+                <div class="relative h-80 w-full">
+                    <canvas id="deathsChart" aria-label="Gráfico de fallecidos en el tiempo" role="img"></canvas>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- External Script -->
+    <script src="/static/js/script.js"></script>
+</body>
+
+</html>
